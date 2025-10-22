@@ -1,0 +1,33 @@
+import React, { useRef, useEffect } from 'react';
+import { createChart } from 'lightweight-charts';
+
+export default function Chart({ data, theme }) {
+  const ref = useRef();
+  const chartRef = useRef();
+  useEffect(() => {
+    if (!ref.current) return;
+    const opts = theme === 'dark' ? {
+      layout: { backgroundColor: '#071133', textColor: '#e6eef8' },
+      rightPriceScale: { borderColor: '#18223a' },
+      timeScale: { borderColor: '#18223a' }
+    } : {
+      layout: { backgroundColor: '#ffffff', textColor: '#0b1220' },
+      rightPriceScale: { borderColor: '#e6eef8' },
+      timeScale: { borderColor: '#e6eef8' }
+    };
+    const chart = createChart(ref.current, { width: ref.current.clientWidth, height: 480, ...opts });
+    const series = chart.addCandlestickSeries();
+    chartRef.current = { chart, series };
+    const onResize = () => chart.applyOptions({ width: ref.current.clientWidth });
+    window.addEventListener('resize', onResize);
+    return () => { window.removeEventListener('resize', onResize); chart.remove(); };
+  }, [theme]);
+
+  useEffect(() => {
+    if (!chartRef.current) return;
+    const { series } = chartRef.current;
+    series.setData(data || []);
+  }, [data]);
+
+  return <div ref={ref} style={{ width: '100%', height: 480 }} />;
+}
